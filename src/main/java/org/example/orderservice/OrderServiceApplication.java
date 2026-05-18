@@ -12,10 +12,15 @@ public class OrderServiceApplication {
     public static void main(String[] args) {
 
         Dotenv dotenv = Dotenv.load();
-        System.setProperty("cloudinary_cloud-name", dotenv.get("cloudinary_cloud-name"));
-        System.setProperty("cloudinary_api-key", dotenv.get("cloudinary_api-key"));
-        System.setProperty("cloudinary_api_secret", dotenv.get("cloudinary_api_secret"));
+        System.setProperty("RABBITMQ_USER", dotenv.get("RABBITMQ_USER"));
+        System.setProperty("RABBITMQ_PASSWORD", dotenv.get("RABBITMQ_PASSWORD"));
 
+        System.setProperty("POSTGRES_USER", dotenv.get("POSTGRES_USER"));
+        System.setProperty("POSTGRES_PASSWORD", dotenv.get("POSTGRES_PASSWORD"));
+
+        System.setProperty("CLOUDINARY_CLOUD_NAME", dotenv.get("CLOUDINARY_CLOUD_NAME"));
+        System.setProperty("CLOUDINARY_API_KEY", dotenv.get("CLOUDINARY_API_KEY"));
+        System.setProperty("CLOUDINARY_API_SECRET", dotenv.get("CLOUDINARY_API_SECRET"));
         SpringApplication.run(OrderServiceApplication.class, args);
     }
 
