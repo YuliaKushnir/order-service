@@ -67,7 +67,7 @@ public class SecurityConfig {
                 return List.of();
             }
 
-            Map<String, Object> client = (Map<String, Object>) resourceAccess.get("oauth2-pkce-client");
+            Map<String, Object> client = (Map<String, Object>) resourceAccess.get("gateway-client");
             if (client == null || client.get("roles") == null) {
                 return List.of();
             }
