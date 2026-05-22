@@ -67,7 +67,7 @@ public class SecurityConfig {
                 return List.of();
             }
 
-            Map<String, Object> client = (Map<String, Object>) resourceAccess.get("gateway-client");
+            Map<String, Object> client = (Map<String, Object>) resourceAccess.get("order-processing");
             if (client == null || client.get("roles") == null) {
                 return List.of();
             }
