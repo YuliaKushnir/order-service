@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.server.WebFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -46,6 +47,29 @@ public class WebConfig {
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }
+        };
+    }
+
+    // Its temp - delete after
+    @Bean
+    public WebFilter logHeadersFilter() {
+        return (exchange, chain) -> {
+
+            System.out.println("===== REQUEST HEADERS =====");
+
+            exchange.getRequest().getHeaders().forEach((key, value) -> {
+                System.out.println(key + " : " + value);
+            });
+
+            String authHeader = exchange.getRequest()
+                    .getHeaders()
+                    .getFirst("Authorization");
+
+            System.out.println("Authorization Header: " + authHeader);
+
+            System.out.println("===========================");
+
+            return chain.filter(exchange);
         };
     }
 
