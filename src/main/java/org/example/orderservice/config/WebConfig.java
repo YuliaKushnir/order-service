@@ -35,14 +35,14 @@ public class WebConfig {
                 .build();
     }
 
-//    @Bean
+    @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
 
                 registry.addMapping("/**")
-                        .allowedOriginPatterns("*")
+                        .allowedOriginPatterns("https://34.116.235.108")
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
@@ -50,27 +50,6 @@ public class WebConfig {
         };
     }
 
-    // Its temp - delete after
-    @Bean
-    public WebFilter logHeadersFilter() {
-        return (exchange, chain) -> {
 
-            System.out.println("===== REQUEST HEADERS =====");
-
-            exchange.getRequest().getHeaders().forEach((key, value) -> {
-                System.out.println(key + " : " + value);
-            });
-
-            String authHeader = exchange.getRequest()
-                    .getHeaders()
-                    .getFirst("Authorization");
-
-            System.out.println("Authorization Header: " + authHeader);
-
-            System.out.println("===========================");
-
-            return chain.filter(exchange);
-        };
-    }
 
 }
