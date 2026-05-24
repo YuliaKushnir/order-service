@@ -20,9 +20,6 @@ public class WebConfig {
     @Value("${webclient-url}")
     String webClientBaseUrl;
 
-    @Value("${frontend-url}")
-    String frontendUrl;
-
     @Bean
     public WebClient.Builder webClientBuilder() {
         return WebClient.builder();
