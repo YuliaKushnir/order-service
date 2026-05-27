@@ -5,6 +5,8 @@ import org.example.orderservice.dto.order.CreateOrderRequest;
 import org.example.orderservice.dto.order.OrderDto;
 import org.example.orderservice.dto.order.UpdateOrderFullRequest;
 import org.example.orderservice.dto.order.UpdateOrderRequest;
+import org.example.orderservice.dto.statistics.OrderStatisticsFilterRequest;
+import org.example.orderservice.dto.statistics.OrderStatisticsResponse;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,5 +27,7 @@ public interface OrderService {
     void deleteOrder(Long id);
 
     OrderDto updateOrder(Long id, UpdateOrderFullRequest request, String authorizationHeader);
+
+    OrderStatisticsResponse getStatistics(OrderStatisticsFilterRequest request);
 
 }

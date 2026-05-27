@@ -8,6 +8,8 @@ import org.example.orderservice.dto.order.CreateOrderRequest;
 import org.example.orderservice.dto.order.OrderDto;
 import org.example.orderservice.dto.order.UpdateOrderFullRequest;
 import org.example.orderservice.dto.order.UpdateOrderRequest;
+import org.example.orderservice.dto.statistics.OrderStatisticsFilterRequest;
+import org.example.orderservice.dto.statistics.OrderStatisticsResponse;
 import org.example.orderservice.service.OrderService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
@@ -77,6 +79,10 @@ public class OrderController {
         return orderService.updateOrder(id, request, authorizationHeader);
     }
 
+    @PostMapping("/statistics")
+    public OrderStatisticsResponse getStatistics(@RequestBody OrderStatisticsFilterRequest request) {
+        return orderService.getStatistics(request);
+    }
 
 
 }

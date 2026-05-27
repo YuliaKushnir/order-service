@@ -15,6 +15,8 @@ import org.example.orderservice.dto.order.UpdateOrderRequest;
 import org.example.orderservice.dto.print.CreatePrintRequest;
 import org.example.orderservice.dto.print.PrintDto;
 import org.example.orderservice.dto.print.UpdatePrintRequest;
+import org.example.orderservice.dto.statistics.OrderStatisticsFilterRequest;
+import org.example.orderservice.dto.statistics.OrderStatisticsResponse;
 import org.example.orderservice.exceptions.CreationException;
 import org.example.orderservice.messaging.EmailMessage;
 import org.example.orderservice.repository.OrderRepository;
@@ -163,133 +165,6 @@ public class OrderServiceImpl implements OrderService {
         return mapOrderToOrderDto(saved);
     }
 
-    /** Update order items */
-//    @Override
-//    @Transactional
-//    public OrderDto updateOrder(Long id, UpdateOrderFullRequest request) {
-//        Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
-//
-//        // Метадані
-//        order.setUserId(request.getUserId());
-//        order.setStatus(request.getStatus() != null ? request.getStatus() : order.getStatus());
-//
-//        order.setDeadline(request.getDeadline());
-//        order.setExecutionDate(request.getExecutionDate());
-//
-//        order.setManagerId(request.getManagerId());
-//        order.setWorkerId(request.getWorkerId());
-//
-//        order.setUserNote(request.getUserNote());
-//        order.setInternalNote(request.getInternalNote());
-//
-//        if (request.getDeadline() != null) {
-//            order.setPriority(resolvePriority(request.getDeadline()));
-//        }
-//
-//        // очищення попередніх items
-//        order.getItems().clear();
-//        BigDecimal orderTotal = BigDecimal.ZERO;
-//
-//        // додавання нових items
-//        if (request.getItems() != null) {
-//
-//            for (UpdateOrderItemRequest itemReq : request.getItems()) {
-//
-//                OrderItem item = new OrderItem();
-//                item.setOrder(order);
-//                item.setProductId(itemReq.getProductId());
-//                item.setProductName(itemReq.getProductName());
-//                item.setBasePrice(nvl(itemReq.getBasePrice()));
-//                item.setTextileColor(itemReq.getTextileColor());
-//                item.setSize(itemReq.getSize());
-//                item.setQuantity(itemReq.getQuantity() == null ? 1 : itemReq.getQuantity());
-//                item.setManualTotal(itemReq.getManualTotal());
-//                item.setComment(itemReq.getComment());
-//
-//                // preview files
-//                List<String> previewUrls = new ArrayList<>();
-//
-//                if (itemReq.getPreviewUrls() != null) {
-//                    previewUrls.addAll(itemReq.getPreviewUrls());
-//                }
-//
-//                if (itemReq.getPreviewFiles() != null) {
-//                    for (MultipartFile file : itemReq.getPreviewFiles()) {
-//                        if (file != null && !file.isEmpty()) {
-//                            previewUrls.add(fileService.upload(file));
-//                        }
-//                    }
-//                }
-//
-//                item.setPreviewUrls(previewUrls);
-//
-//                // Принти
-//                BigDecimal printsTotal = BigDecimal.ZERO;
-//                if (itemReq.getPrints() != null) {
-//                    for (UpdatePrintRequest printReq : itemReq.getPrints()) {
-//                        Print print = new Print();
-//                        print.setOrderItem(item);
-//                        print.setTypeId(printReq.getTypeId());
-//                        print.setTypeName(printReq.getTypeName());
-//                        print.setSize(printReq.getSize());
-//                        print.setPlacement(printReq.getPlacement());
-//                        print.setQuantity(printReq.getQuantity() == null ? 1 : printReq.getQuantity());
-//                        print.setPrice(nvl(printReq.getPrice()));
-//                        print.setManualTotal(printReq.getManualTotal());
-//
-//                        print.setColorCount(printReq.getColorCount());
-//                        print.setColors(printReq.getColors() != null ? printReq.getColors() : new ArrayList<>());
-//
-//                        // Print files
-//                        List<String> fileUrls = new ArrayList<>();
-//
-//                        if (printReq.getFileUrls() != null) {
-//                            fileUrls.addAll(printReq.getFileUrls());
-//                        }
-//                        if (printReq.getFilesForPrint() != null) {
-//                            for (MultipartFile file : printReq.getFilesForPrint()) {
-//                                if (file != null && !file.isEmpty()) {
-//                                    fileUrls.add(fileService.upload(file));
-//                                }
-//                            }
-//                        }
-//
-//                        print.setFileUrls(fileUrls);
-//                        item.getPrints().add(print);
-//                        BigDecimal printTotal =
-//                                printReq.getManualTotal() != null
-//                                        ? printReq.getManualTotal()
-//                                        : nvl(printReq.getPrice()).multiply(
-//                                        BigDecimal.valueOf(print.getQuantity())
-//                                );
-//
-//                        printsTotal = printsTotal.add(printTotal);
-//                    }
-//                }
-//
-//                BigDecimal textileTotal =
-//                        itemReq.getManualTotal() != null
-//                                ? itemReq.getManualTotal()
-//                                : nvl(itemReq.getBasePrice()).multiply(
-//                                BigDecimal.valueOf(item.getQuantity())
-//                        );
-//
-//                BigDecimal finalPrice = textileTotal.add(printsTotal);
-//                item.setFinalPrice(finalPrice);
-//
-//                order.getItems().add(item);
-//
-//                orderTotal = orderTotal.add(finalPrice);
-//            }
-//        }
-//
-//        if (request.getTotalPrice() != null) {
-//            order.setTotalPrice(request.getTotalPrice());
-//        } else {
-//            order.setTotalPrice(orderTotal);
-//        }
-//        return mapOrderToOrderDto(orderRepository.save(order));
-//    }
     @Override
     @Transactional
     public OrderDto updateOrder(Long id, UpdateOrderFullRequest request, String authorizationHeader) {
@@ -584,6 +459,82 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.delete(order);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public OrderStatisticsResponse getStatistics(OrderStatisticsFilterRequest request) {
+
+        List<Order> orders = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        List<Order> filtered = orders.stream()
+                .filter(order -> {
+                    if (request.getManagerId() == null || request.getManagerId().isBlank()) {
+                        return true;
+                    }
+
+                    return request.getManagerId().equals(order.getManagerId());
+                })
+                .filter(order -> {
+                    if (request.getWorkerId() == null || request.getWorkerId().isBlank()) {
+                        return true;
+                    }
+
+                    return request.getWorkerId().equals(order.getWorkerId());
+                })
+
+                .filter(order -> {
+                    if (request.getStatuses() == null || request.getStatuses().isEmpty()) {
+                        return true;
+                    }
+
+                    return request.getStatuses().contains(order.getStatus());
+                })
+                .filter(order -> {
+                    if (request.getDateFrom() == null) {
+                        return true;
+                    }
+
+                    return !order.getCreatedAt()
+                            .toLocalDate()
+                            .isBefore(request.getDateFrom());
+                })
+                .filter(order -> {
+                    if (request.getDateTo() == null) {
+                        return true;
+                    }
+
+                    return !order.getCreatedAt()
+                            .toLocalDate()
+                            .isAfter(request.getDateTo());
+                })
+                .toList();
+
+        BigDecimal total = BigDecimal.ZERO;
+
+        if (request.getWorkerId() != null && !request.getWorkerId().isBlank()) {
+            for (Order order : filtered) {
+                for (OrderItem item : order.getItems()) {
+                    for (Print print : item.getPrints()) {
+                        BigDecimal printPrice = nvl(print.getPrice());
+                        Integer quantity = print.getQuantity() != null ? print.getQuantity() : 1;
+                        total = total.add( printPrice.multiply(BigDecimal.valueOf(quantity)));
+                    }
+                }
+            }
+
+        } else {
+            total = filtered.stream()
+                    .map(Order::getTotalPrice)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+
+        List<OrderDto> orderDtos = filtered.stream()
+                .map(this::mapOrderToOrderDto)
+                .toList();
+
+        return new OrderStatisticsResponse(total, orderDtos);
+    }
+
     /**
      * Check is price not null
      */
@@ -721,10 +672,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void sendConfirmedOrderNotification(String workerId, Long orderId, LocalDateTime deadline, String authorizationHeader) {
-        System.out.println("worker id = " + workerId);
         UserPersonalData user = userValidationService.getUserById(workerId, authorizationHeader);
 
-        System.out.println("user = " + user);
         if (user != null) {
             String formattedDate = deadline == null ? "не встановлено" : deadline.format(DateTimeFormatter.ofPattern("d MMMM HH:mm", new Locale("uk", "UA")));
 
